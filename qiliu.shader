@@ -95,7 +95,7 @@ Shader "Unlit/qiliu"
                 //float2 mo = iMouse.xy/iResolution.xy;
 	
                 // camera
-                float3 col =  float3(0.,0.,0.);//texture( iChannel0, rd ).xyz;
+                //float3 col =  float3(0.,0.,0.);//texture( iChannel0, rd ).xyz;
 
                 float3 blueSky = float3(0.3,.55,0.8);
                 float3 redSky = float3(0.8,0.8,0.6);
@@ -107,34 +107,31 @@ Shader "Unlit/qiliu"
                 float2 cloudSpeed1= _Params2.xy;
                 float2 cloudSpeed2= _Params2.zw;
                 float Maxx=_Min+_Max;
-        
-                #if _SHADERENUM_CLOUD
+
                 float3 cloudColour = _Color.rgb;
         
+                #if _SHADERENUM_CLOUD
 		        float2 sc = cloudSize1 *_Time.y * q+cloudSpeed1*_Time.y;
-		        float3 col1 = lerp( float3(0.,0.,0.), cloudColour, 0.5*smoothstep(_Min,Maxx,fbm(0.0002*sc+fbm(0.0001*sc*_Cloundshape1+_Time.y*cloudFlux1))));
+		        float col1 = lerp( 0, 1, 0.5*smoothstep(_Min,Maxx,fbm(0.0002*sc+fbm(0.0001*sc*_Cloundshape1+_Time.y*cloudFlux1))));
         
                 
                 // cloud layer 2
                  
                 sc = cloudSize2 *_Time.y * q+cloudSpeed2*_Time.y;
-		        float3 col2 = lerp( float3(0.,0.,0.), cloudColour, 0.5*smoothstep(_Min,Maxx,fbm(0.0002*sc+fbm(0.0001*sc*_Cloundshape2+_Time.y*cloudFlux2))));
-                col=max(col1,col2);
+		        float col2 = lerp( 0, 1, 0.5*smoothstep(_Min,Maxx,fbm(0.0002*sc+fbm(0.0001*sc*_Cloundshape2+_Time.y*cloudFlux2))));
+                float col=max(col1,col2);
                 #endif
 
 
                 #if _SHADERENUM_FIRE
-                // layer 1
-                float3 cloudColour = _Color.rgb;
-        
+                // layer 1  
 		        float2 sc = cloudSize1 *_Time.y * q+cloudSpeed1*_Time.y;
-		        col = lerp( col, cloudColour, 0.5*smoothstep(_Min,Maxx,fbm(0.0002*sc+fbm(0.0001*sc*_Cloundshape1+_Time.y*cloudFlux1))));
+		        col = lerp( col, 1, 0.5*smoothstep(_Min,Maxx,fbm(0.0002*sc+fbm(0.0001*sc*_Cloundshape1+_Time.y*cloudFlux1))));
         
                 
-                // cloud layer 2
-                 
+                // cloud layer 2           
                 sc = cloudSize2 *_Time.y * q+cloudSpeed2*_Time.y;
-		        col = lerp( col, cloudColour, 0.5*smoothstep(_Min,Maxx,fbm(0.0002*sc+fbm(0.0001*sc*_Cloundshape2+_Time.y*cloudFlux2))));
+		        col = lerp( col, 1, 0.5*smoothstep(_Min,Maxx,fbm(0.0002*sc+fbm(0.0001*sc*_Cloundshape2+_Time.y*cloudFlux2))));
                 #endif
 
                 
