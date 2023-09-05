@@ -1,10 +1,11 @@
-Shader "Unlit/qiliu"
+Shader "Unlit/qiliu2"
 {
     Properties
     {
         _MainTex ("Noise", 2d) = "white" {}
         _MaskTex ("Mask", 2d) = "white" {}
-        [HDR]_Color("Color", Color) = (1.,1.,1.,0)
+        [HDR]_Color1("Color1", Color) = (1.,1.,1.,0)
+        [HDR]_Color2("Color2", Color) = (1.,1.,1.,0)
         _Min("Min", float) = 0.5
         _Max("Range", float) = 0.05
         _Cloundshape1("Cloundshape1", float) = 5
@@ -15,6 +16,9 @@ Shader "Unlit/qiliu"
         _MaskVspeed("MaskVspeed", float) = 0
         _Params ("CloundsizeandFlux", vector) = ( 0.01,  1.5, 0., 0.)
         _Params2 ("CloundSpeed", vector) = ( 1.0,  1.0, 1.0, 1.0)
+        _Cloudpow("Cloudpow", float) = 1
+        _Minedge("Minedge", float) = 0
+        _Maxedge("Maxedge", float) = 1
         [KeywordEnum(Cloud,Fire)] _ShaderEnum("Shape Type",int) = 0
     }
     SubShader
@@ -42,7 +46,8 @@ Shader "Unlit/qiliu"
             uniform sampler2D _MainTex;
 			uniform float4 _MainTex_ST;
             uniform sampler2D _MaskTex;
-            float4 _Color;
+            float4 _Color1;
+            float4 _Color2;
             float4 _Params;
             float4 _Params2;
             float4 _UVtilingOffset;
@@ -53,6 +58,9 @@ Shader "Unlit/qiliu"
             float _Max;
             float _MaskUspeed;
             float _MaskVspeed;
+            float _cloudpow;
+            float _Minedge;
+            float _Maxedge;
 
             struct appdata
             {
@@ -97,6 +105,8 @@ Shader "Unlit/qiliu"
                 // camera
                 //float3 col =  float3(0.,0.,0.);//texture( iChannel0, rd ).xyz;
 
+                float col =  0;
+
                 float3 blueSky = float3(0.3,.55,0.8);
                 float3 redSky = float3(0.8,0.8,0.6);
 
@@ -108,7 +118,7 @@ Shader "Unlit/qiliu"
                 float2 cloudSpeed2= _Params2.zw;
                 float Maxx=_Min+_Max;
 
-                float3 cloudColour = _Color.rgb;
+                //float3 cloudColour = _Color.rgb;
         
                 #if _SHADERENUM_CLOUD
 		        float2 sc = cloudSize1 *_Time.y * q+cloudSpeed1*_Time.y;
@@ -119,7 +129,7 @@ Shader "Unlit/qiliu"
                  
                 sc = cloudSize2 *_Time.y * q+cloudSpeed2*_Time.y;
 		        float col2 = lerp( 0, 1, 0.5*smoothstep(_Min,Maxx,fbm(0.0002*sc+fbm(0.0001*sc*_Cloundshape2+_Time.y*cloudFlux2))));
-                float col=max(col1,col2);
+                col=max(col1,col2);
                 #endif
 
 
@@ -137,14 +147,17 @@ Shader "Unlit/qiliu"
                 
 
                 col = clamp(col, 0., 1.);
-                col = col*col*(3.0-2.0*col);
+                //col=pow(col,_cloudpow);
+                col=(0.0 + (col - _Minedge) * (1.0) / (_Maxedge - _Minedge));
+                col=saturate(col);
+                //col = col*col*(3.0-2.0*col);
 
                 float2 p = i.uv+_MasktilingOffset.zw;
                 p*=_MasktilingOffset.xy;
                 p.x+=_MaskUspeed*_Time.y;
                 p.y+=_MaskVspeed*_Time.y;
 
-               float4 fragColor = float4( col, col.x*tex2D(_MaskTex,p).r);
+               float4 fragColor = float4( lerp(_Color2.rgb, _Color1.rgb,col), col*tex2D(_MaskTex,p).r);
 
                return fragColor;
             }
